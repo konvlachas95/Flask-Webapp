@@ -1,6 +1,9 @@
 from xmlrpc.client import boolean
-from flask import Blueprint, render_template, request, flash
+from flask import Blueprint, render_template, request, flash, redirect, url_for
 from networkx import cartesian_product
+from .models import User
+from . import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 auth = Blueprint('auth', __name__)
 
@@ -20,16 +23,20 @@ def sign_up():
         password1 = request.form.get('password1')
         password2 = request.form.get('password2')
 
-        if len(email) < 4: 
+        if len(email) < 4:  # type: ignore
             flash('Email must be greater than 3 characters.', category='error')
-        elif len(firstName) < 2:
+        elif len(firstName) < 2: # type: ignore
             flash('First name must be greater than 1 character.', category='error')
         elif password1 != password2:
             flash('Passwords don\'t match.', category='error')
-        elif len(password1) < 7:
+        elif len(password1) < 7: # type: ignore
             flash('Password must have at least 7 characters.', category='error')
         else:
-            flash('Account created!', category='success')
+            new_user = User(email=email, firstName=firstName, password=generate_password_hash(password1, method='sha256'))
+            db.session.add(new_user)
+            db.session.commit()
             
+            flash('Account created!', category='success')
+            return redirect(url_for('views.home'))
 
     return render_template("sign_up.html")
