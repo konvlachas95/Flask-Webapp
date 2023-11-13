@@ -30,7 +30,7 @@ def delete_note():
     noteId = note['noteId']
     note = Note.query.get(noteId)
     if note:
-        if note.user_id == current_user.id:
+        if note.user_id == current_user.id: # type: ignore
             db.session.delete(note)
             db.session.commit()
 
